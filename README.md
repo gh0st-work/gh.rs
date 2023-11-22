@@ -30,11 +30,14 @@ allow to implement **search dream-TUI in the future**.
 
 ### Script to install prebuilt binary
 `bash <(curl -s https://raw.githubusercontent.com/gh0st-work/gh.rs/main/install_prebuilt_binary.sh)`
-Pros:
+
+**Pros:**
 - Fast
-Cons:
+
+**Cons:**
 - Can possibly not work for your machine
-Detailed steps:
+
+**Detailed steps:**
 - Logs every command
 - Checks required commands and permissions 
 - Extracts your machine kernel info and architecture
@@ -43,7 +46,7 @@ Detailed steps:
 - Downloads the tarball archive with the latest release version of the prebuilt binary 
 - Unpacks the tarball archive
 - Renames "gh" binary to "gh.rs" (as cargo does not allow to build binaries with dots in name, and I... don't give a fuck, especially about censorship)
-- Gives execute (+x) pervissions to gh.rs binary
+- Gives execute (+x) permissions to gh.rs binary
 - Tries to run "gh.rs --help" as test command to verify successful installation
 - Moves ./gh.rs to /bin/gh.rs
 - Adds /bin/gh.rs to PATH (/etc/profile.d/gh.rs.sh)
@@ -51,11 +54,14 @@ Detailed steps:
 
 ### Script to install from source
 `bash <(curl -s https://raw.githubusercontent.com/gh0st-work/gh.rs/main/install_from_source.sh)`
-Pros:
+
+**Pros:**
 - Stable af
-Cons:
+
+**Cons:**
 - Long installation time
-Detailed steps:
+
+**Detailed steps:**
 - Logs every command
 - Checks required commands and permissions 
 - Extracts your machine kernel info and architecture
@@ -66,7 +72,7 @@ Detailed steps:
 - Unpacks the tarball archive
 - Builds binary from the source code with Rust
 - Renames "gh" binary to "gh.rs" (as cargo does not allow to build binaries with dots in name, and I... don't give a fuck, especially about censorship)
-- Gives execute (+x) pervissions to gh.rs binary
+- Gives execute (+x) permissions to gh.rs binary
 - Tries to run "gh.rs --help" as test command to verify successful installation
 - Moves ./gh.rs to /bin/gh.rs
 - Adds /bin/gh.rs to PATH (/etc/profile.d/gh.rs.sh)
