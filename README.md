@@ -253,15 +253,15 @@ Commands:
 - [x] Implement & build & simple test command `fork` & command `clone`
 - [x] Implement `GhRsError` & `GhRsResult` & handle errors correctly
 - [x] Implement `cli-only` mode
-- [x] Start implementing `install.sh` script: to download & insert to PATH bin, that is automatically built by GitHub Action
+- [x] Start implementing `install_prebuilt_binary.sh` script: to download & insert to PATH bin, that is automatically built by GitHub Action
 - [x] Implement `git2_add_all_and_commit`
 - [x] Implement `git2_set_branch_upstream` & `git2_default_branch_name`
-- [x] Start implementing `install_source.sh` script, same as `install.sh`, but build from sources
+- [x] Start implementing `install_from_source.sh` script, same as `install_prebuild_binary.sh`, but builds from sources
 - [x] Fill initial `README.md`
 - [x] Create this repo
 - [x] Set up GitHub Actions to build Rust bins
-- [x] Implement & simple test `install.sh`
-- [x] Implement & simple test `install_source.sh`
+- [x] Implement & simple test `install_prebuilt_binaries.sh`
+- [x] Implement & simple test `install_from_source.sh`
 - [x] Compliment myself, bcuz... damn this is not bad for 4 days & first ever Rust project
 - [ ] Modify --help outputs & write global help text generator fn
 - [ ] Start implementing [lazyhub](https://github.com/ryo-ma/lazyhub)-like `search` command TUI with [ratatui](https://github.com/ratatui-org/ratatui)
