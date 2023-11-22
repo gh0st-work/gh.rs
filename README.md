@@ -3,8 +3,9 @@
 
 [![Lines Of Code](https://tokei.rs/b1/github/gh0st-work/gh.rs?category=code)](https://github.com/gh0st-work/gh.rs)
 
-**CLI tool written in Rust &amp; one-liner to provide extra GitHub capabilities: create repo, fork public repo as private**
+**CLI tool written in Rust & one-liner to provide extra GitHub capabilities: create repo, fork public repo as private**
 
+`bash <(curl -s https://raw.githubusercontent.com/gh0st-work/gh.rs/main/install_prebuilt_binary.sh)`
 
 ## Motivation
 Just wanted to fork one repo as private, 
@@ -25,7 +26,51 @@ realizing that this engineering solution would also
 allow to implement **search dream-TUI in the future**.
 
 ## Installation
-`source <(curl -s https://raw.githubusercontent.com/gh0st-work/gh.rs/main/install.sh)`
+**Linux only** for now. I provided some installation options to select from for your comfort.
+
+### Script to install prebuilt binary
+`bash <(curl -s https://raw.githubusercontent.com/gh0st-work/gh.rs/main/install_prebuilt_binary.sh)`
+Pros:
+- Fast
+Cons:
+- Can possibly not work for your machine
+Detailed steps:
+- Logs every command
+- Checks required commands and permissions 
+- Extracts your machine kernel info and architecture
+- Creates temporary directory
+- Fetches the latest release version number
+- Downloads the tarball archive with the latest release version of the prebuilt binary 
+- Unpacks the tarball archive
+- Renames "gh" binary to "gh.rs" (as cargo does not allow to build binaries with dots in name, and I... don't give a fuck, especially about censorship)
+- Gives execute (+x) pervissions to gh.rs binary
+- Tries to run "gh.rs --help" as test command to verify successful installation
+- Moves ./gh.rs to /bin/gh.rs
+- Adds /bin/gh.rs to PATH (/etc/profile.d/gh.rs.sh)
+- Cleans up
+
+### Script to install from source
+`bash <(curl -s https://raw.githubusercontent.com/gh0st-work/gh.rs/main/install_from_source.sh)`
+Pros:
+- Stable af
+Cons:
+- Long installation time
+Detailed steps:
+- Logs every command
+- Checks required commands and permissions 
+- Extracts your machine kernel info and architecture
+- Creates temporary directory
+- Installs Rust & cargo if not installed
+- Fetches the latest release version number
+- Downloads the tarball archive with the latest release version of the source code 
+- Unpacks the tarball archive
+- Builds binary from the source code with Rust
+- Renames "gh" binary to "gh.rs" (as cargo does not allow to build binaries with dots in name, and I... don't give a fuck, especially about censorship)
+- Gives execute (+x) pervissions to gh.rs binary
+- Tries to run "gh.rs --help" as test command to verify successful installation
+- Moves ./gh.rs to /bin/gh.rs
+- Adds /bin/gh.rs to PATH (/etc/profile.d/gh.rs.sh)
+- Cleans up
 
 ## Usage
 ```
@@ -209,8 +254,9 @@ Commands:
 - [x] Fill initial `README.md`
 - [x] Create this repo
 - [x] Set up GitHub Actions to build Rust bins
-- [ ] Implement & simple test `install.sh`
-- [ ] Implement & simple test `install_source.sh`
+- [x] Implement & simple test `install.sh`
+- [x] Implement & simple test `install_source.sh`
+- [x] Compliment myself, bcuz... damn this is not bad for 4 days & first ever Rust project
 - [ ] Modify --help outputs & write global help text generator fn
 - [ ] Start implementing [lazyhub](https://github.com/ryo-ma/lazyhub)-like `search` command TUI with [ratatui](https://github.com/ratatui-org/ratatui)
 - [ ] Start implementing [cliclack](https://github.com/fadeevab/cliclack)-like TUI for other commands

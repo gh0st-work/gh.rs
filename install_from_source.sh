@@ -11,8 +11,6 @@ program_rename="gh.rs"
 test_command="--help"
 start_dir=$(pwd)
 tmp_dir_prefix="gh-rs-install-source"
-no_tmp_dir="__no_tmp_dir__"
-tmp_dir="$no_tmp_dir"
 
 
 join_by() {
@@ -83,7 +81,7 @@ run_log_or_err_sudo() {
 }
 
 check_cmd() {
-    run_log_or_err command -v "$1" > /dev/null 2>&1
+    run_log command -v "$1" > /dev/null 2>&1
 }
 
 required_cmd() {
@@ -100,6 +98,10 @@ assert_nz() {
     if [ -z "$1" ]; then err "assert_nz $2"; fi
 }
 
+hr() {
+    echo "$(run_or_err printf %"$COLUMNS"s | run_or_err tr " " "-")"
+}
+
 
 wget_with_status() {
     local _wget_status=($( run_log_or_err wget --server-response "$1" 2>&1 | run_log_or_err awk '{ if (match($0, /.*HTTP\/[0-9\.]+ ([0-9]+).*/, m)) print m[1] }' ))
@@ -108,16 +110,17 @@ wget_with_status() {
 }
 
 
+path_prefix=""
+no_tmp_dir="__no_tmp_dir__"
+tmp_dir="$no_tmp_dir"
 clean() {
     say "\nCleaning up..."
     run_log_or_err cd $start_dir
     if [[ "$tmp_dir" != "$no_tmp_dir" ]] && [[ -d "$tmp_dir" ]]; then
-        run_log_or_err rm -rf $tmp_dir
+        say "$tmp_dir"
+        run_log_or_err_sudo rm -rf $tmp_dir
     fi
-}
-
-hr() {
-    echo "$(run_or_err printf %"$COLUMNS"s | run_or_err tr " " "-")"
+    export PATH="${PATH:${#path_prefix}}"
 }
 
 main() {
@@ -137,54 +140,57 @@ main() {
     required_cmd chmod
     required_cmd sh
 
-    say "\nCreating temp dir..."
+    say "\nCreating temporary directory..."
     tmp_dir=$(run_log_or_err mktemp -d -t $tmp_dir_prefix.XXXXXXXXXX)
     run_log_or_err cd $tmp_dir
 
-    say "\nChecking if Rust installed..."
+    say "\nChecking if Rust & cargo installed..."
     local _rust_from_env=$(check_cmd cargo)
-    if ! $_rust_from_env; then
-        say "\nInstalling Rust..."
+    if ! "$_rust_from_env"; then
+        say "\nInstalling Rust & cargo..."
         run_log_or_err mkdir "$tmp_dir/rustup"
         run_log_or_err mkdir "$tmp_dir/cargo"
-        run_log_or_err wget -q https://sh.rustup.rs
+        run_log_or_err wget https://sh.rustup.rs -O rustup-init.sh -q
         run_log_or_err_sudo RUSTUP_HOME="$tmp_dir/rustup" CARGO_HOME="$tmp_dir/cargo" bash -c 'sh rustup-init.sh -y'
+        path_prefix="$tmp_dir/cargo/bin:"
+        export PATH="$path_prefix$PATH"
+        run_log_or_err rustup default stable
     fi
     
-    say "\nGetting latest release version..."
-    local _tar_name="$program_name.$_arch.tar.gz"
+    say "\nFetching the latest release version number..."
     local _ver=$( run_log_or_err curl --silent -qI https://github.com/$repo_path/releases/latest | run_log_or_err awk -F '/' '/^location/ {print substr($NF, 1, length($NF)-1)}')
     _ver="${_ver#v}"
     if [[ "$_ver" == "" ]]; then
         err "$(hr)\nError occured, check your internet connection & repo (https://github.com/$repo_path) availability"
     fi
    
-    say "\nDownloading latest (v$_ver) tarball..."
+    say "\nDownloading the tarball archive with the latest (v$_ver) release version of the source code..."
     local _wget_status=$( wget_with_status https://github.com/$repo_path/archive/refs/tags/v$_ver.tar.gz )
     if [[ "$_wget_status" != 200 ]]; then
         err "$(hr)\nWrong respone status code ($_wget_status), check your internet connection & file (https://github.com/$repo_path/releases/download/v$_ver/$_tar_name) availability "
     fi
     
-    say "\nUnpacking tarball..."
-    local _src_dir_name="$repo_name-$ver" 
-    run_log_or_err tar -xzf $_src_dir_name.tar.gz
-    run_log_or_err rm $_src_dir_name.tar.gz
+    say "\nUnpacking the tarball archive..."
+    run_log_or_err tar -xzf v$_ver.tar.gz
+    run_log_or_err rm v$_ver.tar.gz
+    echo $(ls)
     
-    say "\nBuilding with Rust..."
+    say "\nBuilding binary from the source code with Rust..."
+    local _src_dir_name="$repo_name-$_ver" 
     run_log_or_err cd $_src_dir_name
-    run_log_or_err cargo build --release --bin $program_name
+    run_log_or_err cargo build --release --bin $program_name 
     run_log_or_err cp target/release/$program_name $program_name
     
     if [[ "$program_name" != "$program_rename" ]]; then
-        say "\nRenaming $program_name -> $program_rename..."
+        say "\nRenaming \"$program_name\" -> \"$program_rename\"..."
         run_log_or_err mv $program_name $program_rename
     fi
     local _program_name="$program_rename"
     
-    say "\nGiving execute (+x) permissions to $_program_name..."
+    say "\nGiving execute (+x) permissions to $_program_name binary..."
     run_log_or_err chmod +x $_program_name
     
-    say "\nTrying to run \"./$_program_name $test_command\"..."
+    say "\nTrying to run \"./$_program_name $test_command\" as test command to verify successful installation..."
     log ./$_program_name $test_command
     local _help_output=$( ./$_program_name $test_command )
     _help_exit_code=$?
@@ -192,10 +198,10 @@ main() {
         err "$(hr)\n\"./$_program_name $test_command\" exited with code $_help_exit_code:\n$(hr)\n$_help_output\n$(hr)\nAssuming not compatable with your machine or broken, cancelling install"
     fi
     
-    say "\nCopying to /bin/$_program_name..."
-    run_log_or_err_sudo cp ./$_program_name /bin/
+    say "\nMoving ./$_program_name to /bin/$_program_name..."
+    run_log_or_err_sudo mv ./$_program_name /bin/
     run_log_or_err cd $start_dir
-    run_log_or_err rm -rf $tmp_dir
+    run_log_or_err_sudo rm -rf $tmp_dir
     
     say "\nAdding /bin/$_program_name to PATH (/etc/profile.d/$_program_name.sh)..."
     # TODO: make it fn
