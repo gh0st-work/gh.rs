@@ -49,7 +49,7 @@ jobs:
         shell: bash
         if: contains(matrix.target, 'darwin') || contains(matrix.target, 'msvc')
 
-      - name: Set up cross docker
+      - name: Run cross Dockerfile
         uses: docker/build-push-action@v5
         with:
           context: /tmp/cross/docker
