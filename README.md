@@ -45,11 +45,11 @@ allow to implement **search dream-TUI in the future**.
 - Fetches the latest release version number
 - Downloads the tarball archive with the latest release version of the prebuilt binary 
 - Unpacks the tarball archive
-- Renames "gh" binary to "gh.rs" (as cargo does not allow to build binaries with dots in name, and I... don't give a fuck, especially about censorship)
-- Gives execute (+x) permissions to gh.rs binary
-- Tries to run "gh.rs --help" as test command to verify successful installation
-- Moves ./gh.rs to /bin/gh.rs
-- Adds /bin/gh.rs to PATH (/etc/profile.d/gh.rs.sh)
+- Renames `gh` binary to `gh.rs` (as cargo does not allow to build binaries with dots in name, and I... don't give a fuck, especially about censorship)
+- Gives execute (+x) permissions to `gh.rs` binary
+- Tries to run `gh.rs --help` as test command to verify successful installation
+- Moves `./gh.rs` to `/bin/gh.rs`
+- Adds `/bin/gh.rs` to `PATH` (`/etc/profile.d/gh.rs.sh`)
 - Cleans up
 
 ### Script to install from source
@@ -71,11 +71,11 @@ allow to implement **search dream-TUI in the future**.
 - Downloads the tarball archive with the latest release version of the source code 
 - Unpacks the tarball archive
 - Builds binary from the source code with Rust
-- Renames "gh" binary to "gh.rs" (as cargo does not allow to build binaries with dots in name, and I... don't give a fuck, especially about censorship)
-- Gives execute (+x) permissions to gh.rs binary
-- Tries to run "gh.rs --help" as test command to verify successful installation
-- Moves ./gh.rs to /bin/gh.rs
-- Adds /bin/gh.rs to PATH (/etc/profile.d/gh.rs.sh)
+- Renames `gh` binary to `gh.rs` (as cargo does not allow to build binaries with dots in name, and I... don't give a fuck, especially about censorship)
+- Gives execute (+x) permissions to `gh.rs` binary
+- Tries to run `gh.rs --help` as test command to verify successful installation
+- Moves `./gh.rs` to `/bin/gh.rs`
+- Adds `/bin/gh.rs` to PATH (`/etc/profile.d/gh.rs.sh`)
 - Cleans up
 
 ## Usage
