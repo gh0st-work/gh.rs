@@ -441,7 +441,7 @@ main() {
     required_cmd chmod
     required_cmd sh
 
-    say "\nExtracting your machine kernel and architecture..."
+    say "\nExtracting your machine kernel info and architecture..."
     get_architecture || return 1
     local _arch="$RETVAL"
     assert_nz "$_arch" "arch"
