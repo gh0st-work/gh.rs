@@ -260,7 +260,7 @@ Commands:
 - [x] Fill initial `README.md`
 - [x] Create this repo
 - [x] Set up GitHub Actions to build Rust bins
-- [x] Implement & simple test `install_prebuilt_binaries.sh`
+- [x] Implement & simple test `install_prebuilt_binary.sh`
 - [x] Implement & simple test `install_from_source.sh`
 - [x] Compliment myself, bcuz... damn this is not bad for 4 days & first ever Rust project
 - [ ] Modify --help outputs & write global help text generator fn
