@@ -5,7 +5,7 @@ pub use regex::Regex;
 pub use async_std::path as path;
 use std::path as std_path;
 
-pub async fn aprint_args(args: fmt::Arguments<'_>) {
+pub async fn _aprint_args(args: fmt::Arguments<'_>) {
     let mut to_write = String::new();
     let _ = match fmt::write(&mut to_write, args) {
         Ok(r) => r,
@@ -24,7 +24,7 @@ pub async fn aprint_args(args: fmt::Arguments<'_>) {
 
 #[macro_export]
 macro_rules! aprint {
-    ($($arg:tt)*) => (aprint_args(format_args!($($arg)*)).await)
+    ($($arg:tt)*) => (_aprint_args(format_args!($($arg)*)).await)
 }
 
 #[macro_export]

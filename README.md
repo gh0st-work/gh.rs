@@ -79,12 +79,12 @@ allow to implement **search dream-TUI in the future**.
 - Cleans up
 
 ## Usage
+`gh.rs help-full`
 ```
-gh.rs <COMMAND>
+Usage: gh.rs <COMMAND>
 
-Commands: 
-  
-  new, n [OPTIONS]      Create new repo (local & GitHub) 
+Commands:
+  new, n [OPTIONS]           Create new repo (local & GitHub)
     Options:
       -n, --name <name>                Set new repo name
       -d, --description <description>  Set new repo description [aliases: descr]
@@ -92,31 +92,34 @@ Commands:
       -t, --token <access_token>       Set GitHub access token, filled automatically if stored by git [aliases: tok, access-token]
       -c, --cli-only                   CLI-only mode, no prompts, will error if something is not specified, all bools will be set to false automatically [aliases: co, np, no-prompt, no-prompts, no-prompting]
       -h, --help                       Print help
-  
-  publish, p [OPTIONS]  Publish current directory to GitHub [aliases: pub]    
+    
+  publish, p, pub [OPTIONS]  Publish current directory to GitHub
     Options:
       -d, --description <description>  Set new repo description [aliases: descr]
       -p, --public                     Make repo public [aliases: pub, is-public, make-public]
       -t, --token <access_token>       Set GitHub access token, filled automatically if stored by git [aliases: tok, access-token]
       -c, --cli-only                   CLI-only mode, no prompts, will error if something is not specified, all bools will be set to false automatically [aliases: co, np, no-prompt, no-prompts, no-prompting]
       -h, --help                       Print help
-  
-  clone, c [OPTIONS]    Clone GitHub repo   
+    
+  clone, c [OPTIONS]         Clone GitHub repo
     Options:
       -e, --external <repo_url>   Set external repo url
       -t, --token <access_token>  Set GitHub access token, filled automatically if stored by git [aliases: tok, access-token]
       -c, --cli-only              CLI-only mode, no prompts, will error if something is not specified, all bools will be set to false automatically [aliases: co, np, no-prompt, no-prompts, no-prompting]
       -h, --help                  Print help
-  
-  fork, f [OPTIONS]     Fork GitHub repo
+    
+  fork, f [OPTIONS]          Fork GitHub repo
     Options:
       -e, --external <repo_url>   Set external repo url
       -n, --name <name>           Set new repo name
+      -p, --public                Make repo public [aliases: pub, is-public, make-public]
       -t, --token <access_token>  Set GitHub access token, filled automatically if stored by git [aliases: tok, access-token]
       -c, --cli-only              CLI-only mode, no prompts, will error if something is not specified, all bools will be set to false automatically [aliases: co, np, no-prompt, no-prompts, no-prompting]
       -h, --help                  Print help
+    
+  help-full                  Print help fully, describing every command
 
-  help, -h, --help      Print help
+gh.rs GitHub: https://github.com/gh0st-work/gh.rs
 ```
 
 ### Examples
@@ -232,7 +235,7 @@ Commands:
 - [git2](https://crates.io/crates/git2) — for git repo management
 - [configparser](https://crates.io/crates/configparser) — for parsing ~/.gitconfig
 - [ssh_key](https://crates.io/crates/ssh_key), [rand_code](https://crates.io/crates/rand_core) — for SSH keys management
-- [regex](https://crates.io/crates/regex), [home](https://crates.io/crates/home), [thiserror](https://crates.io/crates/thiserror), [chrono](https://crates.io/crates/chrono), [terminal_size](https://crates.io/crates/terminal_size) — as other helpers  
+- [regex](https://crates.io/crates/regex), [home](https://crates.io/crates/home), [thiserror](https://crates.io/crates/thiserror), [chrono](https://crates.io/crates/chrono), [terminal_size](https://crates.io/crates/terminal_size), [anstream](https://crates.io/crates/anstream) — as other helpers  
 
 ### TODO (& devlog):
 - [x] Concept-proof with `gh.sh` (same commands in shell script)
@@ -263,7 +266,8 @@ Commands:
 - [x] Implement & simple test `install_prebuilt_binary.sh`
 - [x] Implement & simple test `install_from_source.sh`
 - [x] Compliment myself, bcuz... damn this is not bad for 4 days & first ever Rust project
-- [ ] Modify --help outputs & write global help text generator fn
+- [x] Modify `--help` outputs & implement `help-full` command
+- [ ] Write tests 
 - [ ] Start implementing [lazyhub](https://github.com/ryo-ma/lazyhub)-like `search` command TUI with [ratatui](https://github.com/ratatui-org/ratatui)
 - [ ] Start implementing [cliclack](https://github.com/fadeevab/cliclack)-like TUI for other commands
 

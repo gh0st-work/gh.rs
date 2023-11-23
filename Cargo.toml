@@ -21,6 +21,7 @@ terminal_size = "0.3.0"
 thiserror = "1.0.50"
 tokio = { version = "1.33.0", features = ["full"] }
 url = "2.4.1"
+anstream = "0.6.4"
 
 [[bin]]
 name = "gh"

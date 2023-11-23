@@ -858,6 +858,7 @@ dependencies = [
 name = "gh-rs"
 version = "0.1.0"
 dependencies = [
+ "anstream",
  "async-std",
  "chrono",
  "clap",

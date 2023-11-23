@@ -2,7 +2,6 @@ use clap::arg;
 mod cmd_macro;
 mod async_io;
 use async_io::*;
-use git2::IntoCString;
 use terminal_size::terminal_size;
 use configparser::ini::Ini;
 use serde::{Serialize, Deserialize};
@@ -906,7 +905,7 @@ Add usage & examples here
 }
 
 
-async fn cmd_new(
+async fn run_new_cmd(
     repo_name_raw_opt: &Option<&str>,
     repo_description_raw_opt: &Option<&str>,
     public_raw: &bool,
@@ -1008,7 +1007,7 @@ async fn cmd_new(
 }
 
 
-async fn cmd_publish(
+async fn run_publish_cmd(
     repo_description_raw_opt: &Option<&str>,
     public_raw: &bool,
     token_raw_opt: &Option<&str>,
@@ -1115,7 +1114,7 @@ async fn cmd_publish(
     Ok(())
 }
 
-async fn cmd_clone(
+async fn run_clone_cmd(
     external_path_raw_opt: &Option<&str>,
     token_raw_opt: &Option<&str>,
     cli_only: &bool,
@@ -1153,7 +1152,7 @@ async fn cmd_clone(
     Ok(())
 }
 
-async fn cmd_fork(
+async fn run_fork_cmd(
     external_path_raw_opt: &Option<&str>,
     repo_name_raw_opt: &Option<&str>,
     public_raw: &bool,
@@ -1277,8 +1276,120 @@ async fn cmd_fork(
     Ok(())
 }
 
-fn cli() -> clap::Command {
+fn cmd_help_expanded_subcommands(
+    root_cmd: &clap::Command, 
+    subcommands: impl IntoIterator<Item = clap::Command> + Clone
+) -> clap::builder::StyledStr {
+    use std::fmt::Write;
+    let mut subcmds_writer = clap::builder::StyledStr::new();
+    
+    let default_help_heading = clap::builder::Str::from("Commands");
+    let help_heading = root_cmd
+        .get_subcommand_help_heading()
+        .unwrap_or(&default_help_heading);
+    let header_style = root_cmd.get_styles().get_header();
+    let _ = write!(
+        subcmds_writer,
+        "{}{help_heading}:{}\n",
+        header_style.render(),
+        header_style.render_reset()
+    );
+    
+    const TAB: &str = "  ";
+    const TAB_WIDTH: usize = TAB.len();
+    fn render_native(cmd: &clap::Command, name: &str) -> clap::builder::StyledStr {
+        cmd.clone().help_template(format!("{{{name}}}")).render_help()
+    }
+    fn ch_width(ch: char) -> usize {
+        1 // or unicode_width::UnicodeWidthChar::width(ch).unwrap_or(0) if unicode
+    }
+    fn display_width(text: &str) -> usize {
+        let mut width = 0;
 
+        let mut control_sequence = false;
+        let control_terminate: char = 'm';
+
+        for ch in text.chars() {
+            if ch.is_ascii_control() {
+                control_sequence = true;
+            } else if control_sequence && ch == control_terminate {
+                control_sequence = false;
+                continue;
+            }
+
+            if !control_sequence {
+                width += ch_width(ch);
+            }
+        }
+        width
+    }
+    fn styled_str_display_width(st_str: &clap::builder::StyledStr) -> usize {
+        let string = st_str.to_string();
+        let iter = [string.as_str()].into_iter(); // or anstream::adapter::strip_str(&self.0) if color
+        iter.fold(0, |w, c| w+display_width(c))
+    }
+    fn subcmd_names(cmd: &clap::Command) -> Vec<String> {
+        let mut names = vec![cmd.get_name().to_string()];
+        let mut aliases: Vec<String> = cmd.get_visible_aliases().map(|n| n.to_string()).collect();
+        aliases.sort_by_key(|a| display_width(a));
+        names.append(&mut aliases);
+        names
+    }
+    fn subcmd_usage(cmd: &clap::Command) -> String {
+        cmd
+        .clone()
+        .render_usage()
+        .to_string()
+        .replace(
+            format!("Usage: {}", cmd.get_name()).as_str(),
+            subcmd_names(cmd).join(", ").as_str()
+        )
+        
+    }
+    let longest = subcommands.clone().into_iter()
+        .fold(2, |m, cmd| std::cmp::max(
+            m, 
+            display_width(subcmd_usage(&cmd).as_str())
+        ));
+    fn render_padding(amount: usize) -> String {
+        let mut string = String::new();
+        let _ = write!(string, "{:amount$}", "");
+        string
+    }
+    for (i, subcmd) in subcommands.into_iter().enumerate() {
+        if i > 0 {
+            let _ = write!(subcmds_writer, "\n");
+        }
+        let usage = subcmd_usage(&subcmd);
+        let padding_amount = longest - display_width(&usage) + TAB_WIDTH;
+        let args = format!(
+            "{TAB}{TAB}{}",
+            render_native(&subcmd, "all-args").to_string()
+                .replace("\n", format!("\n{TAB}{TAB}").as_str())
+        );
+        let _ = write!(
+            subcmds_writer,
+            "{TAB}{usage}{padding}{about}\n{args}",
+            padding=render_padding(padding_amount),
+            about=subcmd.get_about().unwrap_or(&(clap::builder::StyledStr::new())),
+        );
+    }
+
+    let mut help_template = clap::builder::StyledStr::new();
+    let _ = write!(
+        help_template,
+        "\
+{{before-help}}{{about-with-newline}}
+{{usage-heading}} {{usage}}
+
+{subcmds_writer_str}{{after-help}}\
+    ",
+        subcmds_writer_str = subcmds_writer.ansi()
+    );
+    root_cmd.clone().help_template(help_template).render_help()
+}
+
+async fn async_main() {
     let name_arg = arg!(name: -n --name <name> "Set new repo name");
     let description_arg = arg!(description: -d --description <description> "Set new repo description")
         .visible_alias("descr");
@@ -1289,89 +1400,108 @@ fn cli() -> clap::Command {
     let cli_only_arg = arg!(cli_only: -c --"cli-only" "CLI-only mode, no prompts, will error if something is not specified, all bools will be set to false automatically")
         .visible_aliases(["co", "np", "no-prompt", "no-prompts", "no-prompting"]);
     let external_arg = arg!(external: -e --external <repo_url> "Set external repo url"); 
+    
+    let after_help = format!(
+        "gh.rs GitHub: {url}",
+        url = get_gh_rs_github_url(),
+    );
+    
+    let new_cmd = cmd!(-n --new "Create new repo (local & GitHub)")
+        .args([
+            &name_arg,
+            &description_arg,
+            &public_arg,
+            &token_arg,
+            &cli_only_arg,
+        ])
+        .after_help(&after_help);
+    
+    let publish_cmd = cmd!(-p -pub --publish "Publish current directory to GitHub")
+        .args([
+            &description_arg,
+            &public_arg,
+            &token_arg,
+            &cli_only_arg,
+        ])
+        .after_help(&after_help);
 
-    cmd!(--"gh.rs" "Tool to provide extra GitHub capabilities")
+    let clone_cmd = cmd!(-c --clone "Clone GitHub repo")
+        .args([
+            &external_arg,
+            &token_arg,
+            &cli_only_arg,
+        ])
+        .after_help(&after_help);
+
+    let fork_cmd = cmd!(-f --fork "Fork GitHub repo")
+        .args([
+            &external_arg,
+            &name_arg,
+            &public_arg,
+            &token_arg,
+            &cli_only_arg,
+        ])
+        .after_help(&after_help);
+    
+    let help_full_cmd = cmd!(--"help-full" "Print help fully, describing every command")
+        .disable_help_flag(true);
+
+    let subcommands = [
+        new_cmd,
+        publish_cmd,
+        clone_cmd,
+        fork_cmd,
+        help_full_cmd,
+    ];
+
+    let root_cmd = cmd!(--"gh.rs")
         .subcommand_required(true)
         .arg_required_else_help(true)
         .allow_external_subcommands(true)
-        .subcommand(
-            cmd!(-n --new "Create new repo (local & GitHub)")
-                .arg(&name_arg)
-                .arg(&description_arg)
-                .arg(&public_arg)
-                .arg(&token_arg)
-                .arg(&cli_only_arg)
-        )
-        .subcommand(
-            cmd!(-p --publish "Publish current directory to GitHub")
-                .visible_alias("pub")
-                .arg(&description_arg)
-                .arg(&public_arg)
-                .arg(&token_arg)
-                .arg(&cli_only_arg)
-        )
-        .subcommand(
-            cmd!(-c --clone "Clone GitHub repo")
-                .arg(&external_arg)
-                .arg(&token_arg)
-                .arg(&cli_only_arg)
-        )
-        .subcommand(
-            cmd!(-f --fork "Fork GitHub repo")
-                .arg(&external_arg)
-                .arg(&name_arg)
-                .arg(&public_arg)
-                .arg(&token_arg)
-                .arg(&cli_only_arg)
-        )
-}
+        .subcommands(&subcommands)
+        .after_help(&after_help);
 
-async fn async_main() {
-    let cli = cli();
-    let result = match cli.clone().get_matches().subcommand() {
-        Some((subcommand, sub_matches)) => match subcommand {
-            "new" => {
-                cmd_new(
-                    &sub_matches.get_one::<String>("name").map(|v| v.as_str()),
-                    &sub_matches.get_one::<String>("description").map(|v| v.as_str()),
-                    &sub_matches.get_flag("public"),
-                    &sub_matches.get_one::<String>("token").map(|v| v.as_str()),
-                    &sub_matches.get_flag("cli_only"),
-                ).await
-            },
-            "publish" => {
-                cmd_publish(
-                    &sub_matches.get_one::<String>("description").map(|v| v.as_str()),
-                    &sub_matches.get_flag("public"),
-                    &sub_matches.get_one::<String>("token").map(|v| v.as_str()),
-                    &sub_matches.get_flag("cli_only"),
-                ).await
-            },
-            "clone" => {
-                cmd_clone(
-                    &sub_matches.get_one::<String>("external").map(|v| v.as_str()),
-                    &sub_matches.get_one::<String>("token").map(|v| v.as_str()),
-                    &sub_matches.get_flag("cli_only"),
-                ).await
-            },
-            "fork" => {
-                cmd_fork(
-                    &sub_matches.get_one::<String>("external").map(|v| v.as_str()),
-                    &sub_matches.get_one::<String>("name").map(|v| v.as_str()),
-                    &sub_matches.get_flag("public"),
-                    &sub_matches.get_one::<String>("token").map(|v| v.as_str()),
-                    &sub_matches.get_flag("cli_only"),
-                ).await
+    let result = match root_cmd.clone().get_matches().subcommand() {
+        Some((subcmd, submatches)) => match subcmd {
+            "new" => run_new_cmd(
+                &submatches.get_one::<String>("name").map(|v| v.as_str()),
+                &submatches.get_one::<String>("description").map(|v| v.as_str()),
+                &submatches.get_flag("public"),
+                &submatches.get_one::<String>("token").map(|v| v.as_str()),
+                &submatches.get_flag("cli_only"),
+            ).await,
+            "publish" => run_publish_cmd(
+                &submatches.get_one::<String>("description").map(|v| v.as_str()),
+                &submatches.get_flag("public"),
+                &submatches.get_one::<String>("token").map(|v| v.as_str()),
+                &submatches.get_flag("cli_only"),
+            ).await,
+            "clone" => run_clone_cmd(
+                &submatches.get_one::<String>("external").map(|v| v.as_str()),
+                &submatches.get_one::<String>("token").map(|v| v.as_str()),
+                &submatches.get_flag("cli_only"),
+            ).await,
+            "fork" => run_fork_cmd(
+                &submatches.get_one::<String>("external").map(|v| v.as_str()),
+                &submatches.get_one::<String>("name").map(|v| v.as_str()),
+                &submatches.get_flag("public"),
+                &submatches.get_one::<String>("token").map(|v| v.as_str()),
+                &submatches.get_flag("cli_only"),
+            ).await,
+            "help-full" => {
+                let st_str = cmd_help_expanded_subcommands(&root_cmd, subcommands);
+                aprintln!("{}", st_str.ansi());
+                Ok(())
             },
             _ => {
-                aprintln!("Command \"{subcommand}\" not found");
-                let help = cli.clone().render_help();
+                aprintln!("Command \"{subcmd}\" not found");
+                let help = root_cmd.clone().render_help();
                 aprintln!("{help}");
                 Ok(())
             },
         },
         None => {
-            let help = cli.clone().render_help();
+            let help = root_cmd.clone().render_help();
             aprintln!("{help}");
             Ok(())
         },

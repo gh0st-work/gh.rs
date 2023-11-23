@@ -1,5 +1,5 @@
 #[macro_export]
-macro_rules! cmd_impl {
+macro_rules! _cmd_impl {
     ( @string $val:ident ) => {
         stringify!($val)
     };
@@ -38,13 +38,11 @@ macro_rules! cmd_impl {
         $($tail:tt)*
     ) => {{
         let mut cmd = $cmd;
-        let long = $crate::cmd_impl! { @string $long };
+        let long = $crate::_cmd_impl! { @string $long };
         if cmd.get_name() == "" {
             cmd = cmd.name(long);
         }
-        let cmd = cmd
-            .long_flag(long);
-        let cmd = $crate::cmd_impl! {
+        let cmd = $crate::_cmd_impl! {
             @cmd (cmd) $($tail)*
         };
         cmd
@@ -56,13 +54,11 @@ macro_rules! cmd_impl {
         $($tail:tt)*
     ) => {{
         let mut cmd = $cmd;
-        let long = $crate::cmd_impl! { @string $long };
+        let long = $crate::_cmd_impl! { @string $long };
         if cmd.get_name() == "" {
             cmd = cmd.name(long);
         }
-        let cmd = cmd
-            .long_flag(long);
-        let cmd = $crate::cmd_impl! {
+        let cmd = $crate::_cmd_impl! {
             @cmd (cmd) $($tail)*
         };
         cmd
@@ -73,12 +69,9 @@ macro_rules! cmd_impl {
         -$short:ident
         $($tail:tt)*
     ) => {{
-        debug_assert_eq!($cmd.get_long_flag(), None, "Short flags should precede long flags");
-        
         let cmd = $cmd
-            .short_flag($crate::cmd_impl! { @char $short })
-            .visible_alias($crate::cmd_impl! { @string $short });
-        let cmd = $crate::cmd_impl! {
+            .visible_alias($crate::_cmd_impl! { @string $short });
+        let cmd = $crate::_cmd_impl! {
             @cmd (cmd) $($tail)*
         };
         cmd
@@ -89,12 +82,9 @@ macro_rules! cmd_impl {
         -$short:literal
         $($tail:tt)*
     ) => {{
-        debug_assert_eq!($cmd.get_long_flag(), None, "Short flags should precede long flags");
-
         let cmd = $cmd
-            .short_flag($crate::cmd_impl! { @char $short })
-            .visible_alias($crate::cmd_impl! { @string $short });
-        let cmd = $crate::cmd_impl! {
+            .visible_alias($crate::_cmd_impl! { @string $short });
+        let cmd = $crate::_cmd_impl! {
             @cmd (cmd) $($tail)*
         };
         cmd
@@ -105,7 +95,7 @@ macro_rules! cmd_impl {
         ...
         $($tail:tt)*
     ) => {{
-        let cmd = $crate::cmd_impl! {
+        let cmd = $crate::_cmd_impl! {
             @cmd (cmd) $($tail)*
         };
         cmd
@@ -129,7 +119,7 @@ macro_rules! cmd_impl {
 macro_rules! cmd {
     ( $($tail:tt)+ ) => {{
         let cmd = clap::Command::default();
-        let cmd = $crate::cmd_impl! {
+        let cmd = $crate::_cmd_impl! {
             @cmd (cmd) $($tail)+
         };
         debug_assert_ne!(cmd.get_name(), "", "Without a value or long flag, the `name:` prefix is required");
